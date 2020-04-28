@@ -83,14 +83,15 @@ pipeline {
               container("kubectl") {
                 script {
                   // Get IP of service
-                  env.SERVICE_IP = sh(script: 'kubectl get svc ${APP_NAME} -n dev -o \'jsonpath={..status.loadBalancer.ingress..ip}\'', , returnStdout: true).trim()
+                  env.SERVICE_IP = sh(script: 'kubectl get svc simplenodeservice -n staging -o \'jsonpath={.spec.clusterIP}\'', , returnStdout: true).trim()
+                  env.SERVICE_PORT = sh(script: 'kubectl get svc simplenodeservice -n staging -o \'jsonpath={.spec.ports[0].nodePort}\'', , returnStdout: true).trim()
                 }
               }
               container("curl") {
                 script {
                   def status = dt_createUpdateSyntheticTest (
                     testName : "simpleproject.staging.${env.APP_NAME}",
-                    url : "http://${SERVICE_IP}/",
+                    url : "http://${SERVICE_IP}:${SERVICE_PORT}/",
                     method : "GET",
                     location : "${env.DT_SYNTHETIC_LOCATION_ID}"
                   )
