@@ -68,15 +68,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Run tests') {
-            steps {
-                build job: "3. Test",
-                parameters: [
-                    string(name: 'APP_NAME', value: "${env.APP_NAME}")
-                ]
-            }
-        }
         
         stage('DT create synthetic monitor') {
             steps {
@@ -100,6 +91,16 @@ pipeline {
               }
             }
           }
+
+        stage('Run tests') {
+            steps {
+                build job: "3. Test",
+                parameters: [
+                    string(name: 'APP_NAME', value: "${env.APP_NAME}")
+                ]
+            }
+        }
+      
     }
 }
 
