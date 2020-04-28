@@ -17,6 +17,7 @@ pipeline {
         string(name: 'APP_NAME', defaultValue: 'simplenodeservice', description: 'The name of the service to deploy.', trim: true)
         string(name: 'TAG_STAGING', defaultValue: '', description: 'The image of the service to deploy.', trim: true)
         string(name: 'BUILD', defaultValue: '', description: 'The version of the service to deploy.', trim: true)
+        string(name: 'DT_SYNTHETIC_LOCATION_ID', defaultValue: 'SYNTHETIC_LOCATION-F1935855EF18F2E8', description: 'Entity ID for Private Synthetic location', trim: true)
     }
     agent {
         label 'kubegit'
@@ -75,7 +76,28 @@ pipeline {
                     string(name: 'APP_NAME', value: "${env.APP_NAME}")
                 ]
             }
-        }  
+        }
+        
+        stage('DT create synthetic monitor') {
+            steps {
+              container("kubectl") {
+                script {
+                  // Get IP of service
+                  env.SERVICE_IP = sh(script: 'kubectl get svc ${APP_NAME} -n dev -o \'jsonpath={..status.loadBalancer.ingress..ip}\'', , returnStdout: true).trim()
+                }
+              }
+              container("curl") {
+                script {
+                  def status = dt_createUpdateSyntheticTest (
+                    testName : "simpleproject.staging.${env.APP_NAME}",
+                    url : "http://${SERVICE_IP}/",
+                    method : "GET",
+                    location : "${env.DT_SYNTHETIC_LOCATION_ID}"
+                  )
+                }
+              }
+            }
+          }
     }
 }
 
